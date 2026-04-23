@@ -76,10 +76,6 @@ if ! [[ $(ls | grep ^${LAT_VERSION}$) ]]; then
 	tar -xf $TARFILE
 fi
 
-# Adds the extracted directory to the cleanup
-CLEANUP+=($LAT_VERSION)
-
-
 cd ${LAT_VERSION}
 # Compiles Mesa
 meson setup builddir/
