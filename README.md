@@ -12,3 +12,10 @@ Then simply run
 ```
 sh get-mesa.sh
 ```
+
+___
+
+Due to compiling errors, I also had to run
+```
+export BINDGEN_EXTRA_CLANG_ARGS="-I$(gcc -print-file-name=include) --std=gnu11"
+```
