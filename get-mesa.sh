@@ -88,6 +88,9 @@ meson compile -C builddir/
 # Installs Mesa
 sudo meson install -C builddir/
 
+# Creates links to newly installed Mesa
+sudo ldconfig
+
 cd ..
 # Cleans the downloaded/extracted files
 clean_files
