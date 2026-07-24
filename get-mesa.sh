@@ -1,13 +1,39 @@
 #!/bin/bash
 
-:'
+: '
 This is a simple script that gets, extracts, and install the newest release
 	of the Mesa drivers.
 
 TODO:
-	- "yes to all" flag (-y)
-	- "allow release candidates" flag (-r)
+	- "yes to all" flag (-y|--yes)
+	- "allow release candidates" flag (-r|--release)
 '
+
+print_help() {
+	printf '\nSimple script for updating Mesa GPU drivers.\n\n'
+	printf 'Usage: bash get-mesa.sh\n\n'
+	printf '[OPTIONS]\n'
+	echo "-h, --help		show this message"
+	echo "-f, --force		forces installation of newest version, regardless of installed version"
+	
+	echo ""
+}
+
+
+FORCE_INSTALL=0
+
+while test $# -gt 0; do
+	case "$1" in
+		-f|--force)
+			shift
+			FORCE_INSTALL=1
+			;;
+		*)
+			print_help
+			exit 0
+			;;
+	esac
+done
 
 CALLING_DIR=$(pwd)
 DATA_DIR="./data/"
@@ -53,7 +79,7 @@ CRNT_VERSION="$(vulkaninfo --summary \
 # Handles a difference in formatting, where the repo has "mesa-x.x.x" and vulkaninfo has "Mesa x.x.x"
 CRNT_VERSION="${CRNT_VERSION/ /-}"
 
-if [[ ${CRNT_VERSION,,} == ${LAT_VERSION} ]]; then
+if [ ${CRNT_VERSION,,} == ${LAT_VERSION} ] && [ ${FORCE_INSTALL} == 0 ]; then
  	echo "Already latest version."
  	clean_files
 	return 0 2>/dev/null
