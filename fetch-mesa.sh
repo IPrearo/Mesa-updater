@@ -5,8 +5,8 @@ This is a simple script that gets, extracts, and install the newest release
 	of the Mesa drivers.
 
 TODO:
-	- "yes to all" flag (-y|--yes)
-	- "allow release candidates" flag (-r|--release)
+	- "allow release candidates" flag (-r|--release-candidates)
+	- Specify a Mesa version to install (-v*|--version* VERSION)
 '
 
 print_help() {
@@ -19,14 +19,52 @@ print_help() {
 	echo ""
 }
 
+ask_yn(){
+	# Asks the first argument as a yes/no question and echoes and return
+	# 1 for yes
+	# 0 for no
+	
+	if [[ ${YES_TO_ALL} == 1 ]]; then
+		echo 1
+		return 1
+	fi
 
-FORCE_INSTALL=0
+	local RESPONSE=""
+	while [ "${RESPONSE,,}" != 'n' ] && [ "${RESPONSE,,}" != 'y' ]
+	do
+		read -p "$1 (y/n): " RESPONSE
+	done
+
+	if [[ ${RESPONSE,,} == 'y' ]]; then
+		echo 1
+		return 1
+	fi
+	
+	echo 0
+	return 0
+}
+
+clean_files () {
+	# Checks if cleanup is empty
+	if [[ -z ${CLEANUP} ]]; then
+		return 0
+	fi
+
+	ANSWER=$(ask_yn "Clean up files?")
+	if [[ ${ANSWER} ]]; then
+		rm -r ${CLEANUP[*]}
+	fi
+}
 
 while test $# -gt 0; do
 	case "$1" in
 		-f|--force)
 			shift
 			FORCE_INSTALL=1
+			;;
+		-y|--yes)
+			shift
+			YES_TO_ALL=1
 			;;
 		*)
 			print_help
@@ -40,22 +78,6 @@ DATA_DIR="./data/"
 SITE="https://archive.mesa3d.org/"
 
 CLEANUP=()
-clean_files () {
-	# Checks if cleanup is empty
-	if [[ -z ${CLEANUP} ]]; then
-		return 0
-	fi
-
-	RESPONSE=""
-	while [ "${RESPONSE,,}" != 'n' ] && [ "${RESPONSE,,}" != 'y' ]
-	do	
-		read -p "Clean up files? (y/n): " RESPONSE
-	done
-
-	if [[ ${RESPONSE,,} == 'y' ]]; then
-		rm -r ${CLEANUP[*]}
-	fi
-}
 
 mkdir -p ${DATA_DIR}
 cd ${DATA_DIR}
@@ -79,7 +101,7 @@ CRNT_VERSION="$(vulkaninfo --summary \
 # Handles a difference in formatting, where the repo has "mesa-x.x.x" and vulkaninfo has "Mesa x.x.x"
 CRNT_VERSION="${CRNT_VERSION/ /-}"
 
-if [ ${CRNT_VERSION,,} == ${LAT_VERSION} ] && [ ${FORCE_INSTALL} == 0 ]; then
+if [ ${CRNT_VERSION,,} == ${LAT_VERSION} ] && [ -z ${FORCE_INSTALL} ]; then
  	echo "Already latest version."
  	clean_files
 	return 0 2>/dev/null
@@ -106,16 +128,27 @@ fi
 CLEANUP+=($LAT_VERSION)
 
 
+COMPILE=$(ask_yn "Compile the downloaded version?")
+if [[ !${COMPILE} ]]; then
+	clean_files
+	return 0 2>/dev/null
+	exit 0
+fi
+
 cd ${LAT_VERSION}
 # Compiles Mesa
 meson setup builddir/
 meson compile -C builddir/
 
-# Installs Mesa
-sudo meson install -C builddir/
+INSTALL=$(ask_yn "Install compiled Mesa version? Needs superuser access.")
 
-# Creates links to newly installed Mesa
-sudo ldconfig
+if [[ ${INSTALL} ]]; then
+	# Installs Mesa
+	sudo meson install -C builddir/
+
+	# Creates links to newly installed Mesa, needs super user status
+	sudo ldconfig
+fi
 
 cd ..
 # Cleans the downloaded/extracted files
