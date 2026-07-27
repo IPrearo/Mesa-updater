@@ -129,7 +129,7 @@ CLEANUP+=($LAT_VERSION)
 
 
 COMPILE=$(ask_yn "Compile the downloaded version?")
-if [[ !${COMPILE} ]]; then
+if [[ "${COMPILE}" -eq "0" ]]; then
 	clean_files
 	return 0 2>/dev/null
 	exit 0
