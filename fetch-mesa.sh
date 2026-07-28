@@ -13,9 +13,10 @@ print_help() {
 	printf '\nSimple script for updating Mesa GPU drivers.\n\n'
 	printf 'Usage: bash get-mesa.sh\n\n'
 	printf '[OPTIONS]\n'
-	echo "-h, --help		show this message"
-	echo "-f, --force		forces installation of newest version, regardless of installed version"
-	
+	echo "-h, --help	show this message"
+	echo "-f, --force	forces installation of newest version, regardless of installed version"
+	echo "-y, --yes		automatically answers yes to all confirmation questions"
+
 	echo ""
 }
 
